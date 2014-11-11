@@ -32,14 +32,14 @@ import android.util.Log;
 public class PlaceDownloaderTask extends AsyncTask<Location, Void, PlaceRecord> {
 
 	// False if you don't have network access
-	private boolean mHasNetwork = false;
+	private boolean mHasNetwork = true;
 
 	// Log TAG
 	private static final String TAG = "PlaceDownloaderTask";
 
 	// Optional TODO - Put your www.geonames.org account name here if you want to
 	// use the geonames.org web service. To use this service, you must register for a free account.
-	private static String USERNAME = "YOUR_geonames_ACCOUNT_NAME";
+	private static String USERNAME = "weilinwilliam";
 
 	private HttpURLConnection mHttpUrl;
 	private WeakReference<PlaceViewActivity> mParent;

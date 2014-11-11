@@ -7,12 +7,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class PlaceViewActivity extends ListActivity implements LocationListener {
@@ -20,7 +22,7 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 	private static final String TAG = "Lab-Location";
 
 	// Set to false if you don't have network access
-	public static boolean sHasNetwork = false;
+	public static boolean sHasNetwork = true;
 
 	private Location mLastLocationReading;
 	private PlaceViewAdapter mAdapter;
@@ -35,6 +37,8 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 
 	// A fake location provider used for testing
 	private MockLocationProvider mMockLocationProvider;
+	
+	private TextView footerView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +52,10 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 
 		// TODO - add a footerView to the ListView
 		// You can use footer_view.xml to define the footer
-
-		View footerView = null;
+		
+		LayoutInflater inflater = getLayoutInflater();
+		footerView = (TextView)inflater.inflate(R.layout.footer_view, null);
+		placesListView.setFooterDividersEnabled(true);
 
 		// TODO - footerView must respond to user clicks, handling 3 cases:
 
@@ -72,26 +78,35 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 			@Override
 			public void onClick(View arg0) {
 				Log.i(TAG, "Entered footerView.OnClickListener.onClick()");
+				
+				if (mLocationManager != null) {
+					
+					mLastLocationReading = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+				}
 
+				if (mLastLocationReading != null) {	
+					
+					onLocationChanged(mLastLocationReading);
+					
+					if (mAdapter.intersects(mLastLocationReading)) {
+						Log.i(TAG, "You already have this location badge");
+						
+						Toast.makeText(PlaceViewActivity.this,
+								"You already have this location badge",
+								Toast.LENGTH_LONG).show();
+						
+					}
+					else {
+						Log.i(TAG, "Download place information");
+						new PlaceDownloaderTask(PlaceViewActivity.this, sHasNetwork).execute(mLastLocationReading);
+					}
+				} 
+				else {					
+					Log.i(TAG, "no current location data");
+					footerView.setEnabled(false);
+				}
 
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
 			}
-
 		});
 
 		placesListView.addFooterView(footerView);
@@ -108,16 +123,14 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 
 		// TODO - Check NETWORK_PROVIDER for an existing location reading.
 		// Only keep this last reading if it is fresh - less than 5 minutes old
-
 		
+		if(mLastLocationReading != null && ageInMilliseconds(mLastLocationReading) > FIVE_MINS){
+			mLastLocationReading = new Location(mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+		}
 		
-		
-		mLastLocationReading = null;
-		
-
 		// TODO - register to receive location updates from NETWORK_PROVIDER
 
-
+		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mMinTime, mMinDistance, this);
 		
 		
 	}
@@ -127,9 +140,7 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 
 		// TODO - unregister for location updates
 
-
-		
-		
+		mLocationManager.removeUpdates(this);
 		shutdownMockLocationManager();
 		super.onPause();
 	}
@@ -154,25 +165,17 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 		// Do not add the PlaceBadge to the adapter
 		
 		// Otherwise - add the PlaceBadge to the adapter
-		
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		if (null == place) {
+			Toast.makeText(PlaceViewActivity.this,
+					"PlaceBadge could not be acquired",
+					Toast.LENGTH_LONG).show();
+		} else if (place.getCountryName() == null || place.getCountryName().isEmpty()) {
+			Toast.makeText(PlaceViewActivity.this,
+					"There is no country at this location",
+					Toast.LENGTH_LONG).show();
+		} else {
+			mAdapter.add(place);
+		}
 	}
 
 	// LocationListener methods
@@ -188,12 +191,14 @@ public class PlaceViewActivity extends ListActivity implements LocationListener 
 		// current location.
 
 		
+		if (mLastLocationReading == null) {
+			mLastLocationReading = currentLocation;
+		}
 		
-		
-		
-		
-		
-		mLastLocationReading = null;
+		if ((currentLocation != null) && (ageInMilliseconds(currentLocation) < ageInMilliseconds(mLastLocationReading))) {
+			mLastLocationReading = currentLocation;
+		}
+		footerView.setEnabled(true);
 		
 	}
 
