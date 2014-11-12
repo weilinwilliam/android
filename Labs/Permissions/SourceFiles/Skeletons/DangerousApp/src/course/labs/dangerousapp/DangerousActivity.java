@@ -2,7 +2,7 @@ package course.labs.dangerousapp;
 
 import android.app.Activity;
 import android.os.Bundle;
-//kaka
+
 public class DangerousActivity extends Activity {
 
 	@Override
