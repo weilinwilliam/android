@@ -91,7 +91,7 @@ public class ActivityLoaderActivity extends Activity {
 		// will carry out the baseIntent
 		// (HINT: Use the Intent class' createChooser() method)
 		Intent chooserIntent = null;
-        	chooserIntent = new createChooser(baseIntent, "Load http://www.google.com with:");
+        	chooserIntent =  Intent.createChooser(baseIntent, "Load http://www.google.com with:");
 		Log.i(TAG,"Chooser Intent Action:" + chooserIntent.getAction());      
 		// TODO - Start the chooser Activity, using the chooser intent
 		startActivity(chooserIntent);
